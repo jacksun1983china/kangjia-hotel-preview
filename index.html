@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>康家云商 - 天津酒店预订</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;background:#f5f5f5;overflow:hidden;}
+
+/* 全屏容器 */
+#app{
+  width:100%;height:100%;
+  background:#f5f5f5;
+  position:fixed;
+  top:0;left:0;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  max-width:480px;
+  margin:0 auto;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+/* 状态栏 */
+.sbar{height:44px;background:#1a6b4a;display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.sbar-time{color:#fff;font-size:15px;font-weight:700;}
+.sbar-icons{color:#fff;font-size:13px;display:flex;gap:6px;align-items:center;}
+
+/* 导航栏 */
+.nbar{height:44px;background:#1a6b4a;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+.nbar-back{position:absolute;left:12px;color:#fff;font-size:26px;cursor:pointer;padding:4px 8px;display:none;}
+.nbar-title{color:#fff;font-size:17px;font-weight:600;}
+.nbar-right{position:absolute;right:12px;color:rgba(255,255,255,0.8);font-size:13px;}
+
+/* 内容区 */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#f5f5f5;}
+.content::-webkit-scrollbar{display:none;}
+
+/* TabBar */
+.tabbar{height:56px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;flex-shrink:0;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:4px 0;}
+.tab-ico{font-size:22px;line-height:1;}
+.tab-lbl{font-size:10px;color:#999;font-weight:500;}
+.tab.on .tab-lbl{color:#1a6b4a;font-weight:700;}
+
+/* 页面 */
+.page{display:none;min-height:100%;}
+.page.on{display:block;}
+
+/* ===== 通用组件 ===== */
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;}
+.sec-hd-l{display:flex;align-items:center;gap:6px;}
+.sec-bar{width:4px;height:18px;background:linear-gradient(#1a6b4a,#2d9e6e);border-radius:2px;}
+.sec-ttl{font-size:16px;font-weight:700;color:#222;}
+.sec-more{font-size:12px;color:#1a6b4a;cursor:pointer;}
+.green-btn{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;font-weight:700;border-radius:25px;text-align:center;cursor:pointer;}
+.red-price .sym{font-size:12px;color:#e84040;font-weight:600;}
+.red-price .val{font-size:22px;color:#e84040;font-weight:900;}
+.red-price .unit{font-size:11px;color:#aaa;}
+
+/* ===== 首页 ===== */
+.home-top{background:linear-gradient(160deg,#0d4a30,#1a6b4a 55%,#2d9e6e);padding:12px 14px 14px;}
+.home-logo{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.home-logo-txt{font-size:22px;font-weight:800;color:#fff;letter-spacing:2px;}
+.home-logo-sub{font-size:11px;color:rgba(255,255,255,0.65);margin-left:2px;}
+.home-search{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:25px;padding:9px 14px;display:flex;align-items:center;gap:6px;margin-bottom:10px;cursor:pointer;}
+.home-search span{font-size:13px;color:rgba(255,255,255,0.75);}
+.date-row{background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:6px;}
+.dr-item{flex:1;text-align:center;}
+.dr-lbl{display:block;font-size:10px;color:rgba(255,255,255,0.65);}
+.dr-val{display:block;font-size:14px;font-weight:700;color:#fff;}
+.dr-wk{display:block;font-size:10px;color:rgba(255,255,255,0.6);}
+.dr-sep{text-align:center;padding:0 6px;border-left:1px solid rgba(255,255,255,0.3);border-right:1px solid rgba(255,255,255,0.3);}
+.dr-n{display:block;font-size:20px;font-weight:900;color:#f0c040;}
+.dr-nl{display:block;font-size:10px;color:rgba(255,255,255,0.65);}
+.dr-btn{background:linear-gradient(135deg,#d4a017,#f0c040);color:#fff;font-size:13px;font-weight:700;padding:8px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;}
+
+/* Banner */
+.banner{position:relative;height:160px;overflow:hidden;}
+.banner-track{display:flex;height:160px;transition:transform 0.5s ease;}
+.banner-slide{min-width:100%;position:relative;}
+.banner-slide img{width:100%;height:160px;object-fit:cover;display:block;}
+.banner-mask{position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(transparent,rgba(0,0,0,0.6));}
+.banner-txt{position:absolute;bottom:10px;left:14px;}
+.banner-txt b{display:block;font-size:15px;color:#fff;font-weight:800;}
+.banner-txt s{display:block;font-size:11px;color:rgba(255,255,255,0.85);}
+.banner-dots{position:absolute;bottom:8px;right:12px;display:flex;gap:4px;}
+.dot{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,0.4);transition:all 0.3s;}
+.dot.on{background:#fff;width:16px;}
+
+/* 快捷导航 */
+.quick-nav{display:flex;justify-content:space-around;padding:14px 8px;background:#fff;margin:10px 12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.qi{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
+.qi-ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.qi-ico.g{background:linear-gradient(135deg,#e8f5ee,#c8ecd8);}
+.qi-ico.b{background:linear-gradient(135deg,#e8f0ff,#c8d8ff);}
+.qi-ico.o{background:linear-gradient(135deg,#fff3e0,#ffe0b2);}
+.qi-ico.r{background:linear-gradient(135deg,#ffeaea,#ffcdd2);}
+.qi-ico.p{background:linear-gradient(135deg,#f3e8ff,#e1c4ff);}
+.qi-lbl{font-size:11px;color:#555;}
+
+/* 优惠横幅 */
+.promo-strip{margin:0 12px 10px;background:linear-gradient(135deg,#1a6b4a,#0d4a30);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.ps-l{display:flex;flex-direction:column;gap:3px;}
+.ps-tag{background:#d4a017;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;width:fit-content;margin-bottom:2px;}
+.ps-ttl{font-size:14px;font-weight:700;color:#fff;}
+.ps-sub{font-size:11px;color:rgba(255,255,255,0.7);}
+.ps-btn{background:#d4a017;color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:20px;white-space:nowrap;}
+
+/* 热门横滑 */
+.hscroll{overflow-x:auto;padding:0 12px 12px;}
+.hscroll::-webkit-scrollbar{display:none;}
+.hlist{display:flex;gap:10px;width:max-content;}
+.hcard{width:138px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;flex-shrink:0;}
+.hcard img{width:138px;height:92px;object-fit:cover;display:block;}
+.hcard-info{padding:8px;}
+.hcard-name{font-size:12px;font-weight:700;color:#222;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hcard-area{font-size:10px;color:#888;margin-bottom:3px;}
+.hcard-price{display:flex;align-items:baseline;gap:1px;}
+.hcp-s{font-size:11px;color:#e84040;font-weight:600;}
+.hcp-v{font-size:17px;color:#e84040;font-weight:900;}
+.hcp-u{font-size:10px;color:#aaa;}
+.htag{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#d4a017,#f0c040);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;}
+
+/* 推荐列表 */
+.rlist{padding:0 12px;display:flex;flex-direction:column;gap:10px;}
+.rcard{background:#fff;border-radius:12px;overflow:hidden;display:flex;height:108px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;}
+.rcard img{width:108px;height:108px;object-fit:cover;flex-shrink:0;}
+.rcard-info{flex:1;padding:10px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+.rcard-name{font-size:13px;font-weight:700;color:#222;line-height:1.3;}
+.rcard-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.rtag{background:#e8f5ee;color:#1a6b4a;font-size:9px;padding:2px 6px;border-radius:4px;}
+.rcard-addr{font-size:10px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rcard-bot{display:flex;align-items:center;justify-content:space-between;}
+.rscore{background:#1a6b4a;color:#fff;font-size:12px;font-weight:800;padding:2px 6px;border-radius:4px;}
+
+/* ===== 酒店列表 ===== */
+.filter-bar{background:#fff;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,0.06);}
+.fb-search{padding:10px 12px 6px;}
+.fb-box{background:#f5f5f5;border-radius:25px;padding:8px 14px;display:flex;align-items:center;gap:6px;font-size:13px;color:#999;cursor:pointer;}
+.area-tabs{display:flex;gap:6px;padding:0 12px 8px;overflow-x:auto;}
+.area-tabs::-webkit-scrollbar{display:none;}
+.atab{padding:5px 12px;border-radius:20px;font-size:12px;color:#666;background:#f5f5f5;border:1px solid #e8e8e8;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all 0.2s;}
+.atab.on{background:#1a6b4a;color:#fff;border-color:#1a6b4a;font-weight:700;}
+.sort-row{display:flex;padding:0 12px 8px;border-top:1px solid #f5f5f5;padding-top:6px;}
+.stab{flex:1;text-align:center;font-size:11px;color:#888;cursor:pointer;padding:2px 0;}
+.stab.on{color:#1a6b4a;font-weight:700;}
+.date-strip{background:#e8f5ee;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:12px;}
+.ds-lbl{color:#1a6b4a;font-weight:600;}
+.ds-n{flex:1;text-align:center;color:#555;}
+.ds-chg{color:#1a6b4a;text-decoration:underline;cursor:pointer;}
+.res-cnt{padding:8px 14px;font-size:12px;color:#888;}
+.res-cnt em{color:#1a6b4a;font-weight:700;font-size:14px;font-style:normal;}
+.hlwrap{padding:0 12px;display:flex;flex-direction:column;gap:12px;padding-bottom:14px;}
+.hlcard{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;}
+.hlc-img{position:relative;}
+.hlc-img img{width:100%;height:155px;object-fit:cover;display:block;}
+.hlc-stars{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.45);border-radius:6px;padding:3px 8px;color:#d4a017;font-size:11px;}
+.hlc-hot{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#e84040,#ff6b6b);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;}
+.hlc-body{padding:10px 12px;}
+.hlc-name{font-size:15px;font-weight:700;color:#222;margin-bottom:3px;}
+.hlc-area{font-size:11px;color:#1a6b4a;font-weight:600;margin-bottom:6px;}
+.hlc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.hltag{background:#e8f5ee;color:#1a6b4a;font-size:10px;padding:2px 7px;border-radius:4px;}
+.hlc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.hlc-score{display:flex;align-items:center;gap:6px;}
+.hlc-sbox{background:#1a6b4a;border-radius:6px 6px 6px 0;padding:4px 7px;}
+.hlc-sv{font-size:14px;font-weight:800;color:#fff;}
+.hlc-slv{font-size:13px;font-weight:600;color:#333;}
+.hlc-scnt{font-size:10px;color:#aaa;}
+.hlc-price{display:flex;align-items:baseline;gap:1px;}
+.hlcp-s{font-size:13px;color:#e84040;font-weight:600;}
+.hlcp-v{font-size:26px;color:#e84040;font-weight:900;}
+.hlcp-u{font-size:11px;color:#aaa;}
+.hlc-bookbtn{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;font-size:14px;font-weight:700;text-align:center;padding:10px;border-radius:25px;}
+
+/* ===== 酒店详情 ===== */
+.det-swiper{position:relative;height:220px;overflow:hidden;}
+.det-swiper img{width:100%;height:220px;object-fit:cover;display:block;}
+.det-mask{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,0,0,0.5));}
+.det-back{position:absolute;top:10px;left:12px;width:36px;height:36px;background:rgba(0,0,0,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;cursor:pointer;}
+.det-cnt{position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.45);color:#fff;font-size:11px;padding:3px 8px;border-radius:10px;}
+.det-basic{background:#fff;margin:10px 12px;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.det-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.det-name{font-size:17px;font-weight:800;color:#222;line-height:1.3;}
+.det-stars{color:#d4a017;font-size:12px;margin-top:4px;}
+.det-sbadge{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);border-radius:10px;padding:8px 10px;text-align:center;flex-shrink:0;}
+.dsb-n{display:block;font-size:24px;font-weight:900;color:#fff;line-height:1;}
+.dsb-l{display:block;font-size:10px;color:rgba(255,255,255,0.9);}
+.dsb-c{display:block;font-size:9px;color:rgba(255,255,255,0.7);}
+.det-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.dtag{background:#e8f5ee;color:#1a6b4a;font-size:10px;padding:3px 8px;border-radius:4px;}
+.det-addr{font-size:11px;color:#888;margin-bottom:10px;}
+.det-datebar{background:#f8f8f8;border-radius:8px;padding:10px 12px;display:flex;align-items:center;}
+.ddb-item{flex:1;text-align:center;}
+.ddb-lbl{display:block;font-size:10px;color:#aaa;}
+.ddb-val{display:block;font-size:13px;font-weight:700;color:#333;}
+.ddb-sep{padding:0 10px;border-left:1px solid #e0e0e0;border-right:1px solid #e0e0e0;margin:0 8px;text-align:center;}
+.ddb-n{display:block;font-size:18px;font-weight:900;color:#1a6b4a;}
+.ddb-nl{display:block;font-size:10px;color:#aaa;}
+.det-sec{background:#fff;margin:0 12px 10px;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.ds-hd{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.ds-bar{width:4px;height:18px;background:linear-gradient(#1a6b4a,#2d9e6e);border-radius:2px;}
+.ds-ttl{font-size:15px;font-weight:700;color:#222;}
+.desc-txt{font-size:12px;color:#555;line-height:1.7;}
+.fac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.fac-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.fac-ico{font-size:22px;}
+.fac-nm{font-size:10px;color:#555;text-align:center;}
+.room-list{display:flex;flex-direction:column;gap:10px;}
+.ritem{border:1.5px solid #e8e8e8;border-radius:10px;padding:12px;display:flex;justify-content:space-between;gap:10px;cursor:pointer;transition:all 0.2s;}
+.ritem.sel{border-color:#1a6b4a;background:#f0faf5;}
+.ri-l{flex:1;}
+.ri-type{font-size:13px;font-weight:700;color:#222;margin-bottom:6px;}
+.ri-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+.ri-m{font-size:10px;color:#777;}
+.ri-stock{font-size:10px;color:#1a6b4a;}
+.ri-stock.low{color:#e84040;font-weight:600;}
+.ri-r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.ri-price{display:flex;align-items:baseline;gap:1px;}
+.rip-s{font-size:12px;color:#e84040;font-weight:600;}
+.rip-v{font-size:22px;color:#e84040;font-weight:900;}
+.rip-u{font-size:10px;color:#aaa;}
+.ri-total{font-size:10px;color:#aaa;}
+.ri-btn{background:#f0f0f0;color:#666;font-size:11px;padding:5px 12px;border-radius:20px;font-weight:600;}
+.ri-btn.sel{background:#1a6b4a;color:#fff;}
+.rev-list{display:flex;flex-direction:column;gap:14px;}
+.rev-item{padding-bottom:14px;border-bottom:1px solid #f5f5f5;}
+.rev-item:last-child{border-bottom:none;padding-bottom:0;}
+.rev-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.rev-av{width:36px;height:36px;background:linear-gradient(135deg,#e8f5ee,#c8ecd8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.rev-name{font-size:13px;font-weight:600;color:#333;}
+.rev-date{font-size:10px;color:#aaa;}
+.rev-stars{color:#d4a017;font-size:12px;margin-left:auto;}
+.rev-txt{font-size:12px;color:#555;line-height:1.6;margin-bottom:4px;}
+.rev-room{font-size:10px;color:#aaa;}
+.det-bookbar{background:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -2px 10px rgba(0,0,0,0.08);flex-shrink:0;}
+.dbb-l{display:flex;flex-direction:column;gap:2px;}
+.dbb-pr{display:flex;align-items:baseline;gap:2px;}
+.dbb-s{font-size:13px;color:#e84040;font-weight:600;}
+.dbb-v{font-size:26px;color:#e84040;font-weight:900;}
+.dbb-u{font-size:11px;color:#aaa;}
+.dbb-t{font-size:10px;color:#aaa;}
+.dbb-btn{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;font-size:15px;font-weight:700;padding:12px 28px;border-radius:25px;cursor:pointer;}
+
+/* ===== 优惠活动 ===== */
+.promo-top{background:linear-gradient(160deg,#0d4a30,#1a6b4a,#2d9e6e);padding:16px 14px 0;}
+.pt-ttl{font-size:22px;font-weight:800;color:#fff;display:block;margin-bottom:4px;}
+.pt-sub{font-size:12px;color:rgba(255,255,255,0.7);display:block;margin-bottom:14px;}
+.ptabs{display:flex;gap:8px;padding-bottom:16px;overflow-x:auto;}
+.ptabs::-webkit-scrollbar{display:none;}
+.ptab{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:10px;cursor:pointer;flex-shrink:0;transition:all 0.2s;}
+.ptab.on{background:#fff;border-color:#fff;}
+.ptab .pi{font-size:18px;}
+.ptab .pl{font-size:10px;color:rgba(255,255,255,0.85);white-space:nowrap;}
+.ptab.on .pl{color:#1a6b4a;font-weight:700;}
+.cdown{background:linear-gradient(135deg,#fff3e0,#ffe0b2);padding:10px 14px;display:flex;align-items:center;gap:6px;font-size:12px;color:#555;}
+.cdown-t{font-size:15px;font-weight:800;color:#e84040;font-family:monospace;}
+.pbig-list{padding:10px 12px;display:flex;flex-direction:column;gap:14px;}
+.pbcard{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);cursor:pointer;}
+.pbc-img{position:relative;height:148px;}
+.pbc-img img{width:100%;height:148px;object-fit:cover;display:block;}
+.pbc-mask{position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,rgba(0,0,0,0.5));}
+.pbc-tag{position:absolute;top:10px;left:10px;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;}
+.pbc-disc{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.5);border-radius:8px;padding:4px 8px;}
+.pbc-dv{font-size:18px;font-weight:900;color:#f0c040;}
+.pbc-body{padding:12px 14px;}
+.pbc-ttl{font-size:16px;font-weight:800;color:#222;margin-bottom:3px;}
+.pbc-sub{font-size:12px;color:#1a6b4a;font-weight:600;margin-bottom:6px;}
+.pbc-desc{font-size:11px;color:#666;line-height:1.6;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pbc-hotels{background:#f0faf5;border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:4px;margin-bottom:10px;}
+.pbc-ht{font-size:11px;color:#1a6b4a;font-weight:600;}
+.pbc-foot{display:flex;align-items:center;justify-content:space-between;}
+.pbc-valid{font-size:10px;color:#aaa;}
+.pbc-btn{background:linear-gradient(135deg,#d4a017,#f0c040);color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:20px;}
+.mem-card{margin:0 12px 14px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.mc-l{display:flex;align-items:center;gap:12px;}
+.mc-ico{font-size:32px;}
+.mc-ttl{font-size:15px;font-weight:700;color:#f0c040;}
+.mc-sub{font-size:11px;color:rgba(255,255,255,0.65);}
+.mc-arr{font-size:22px;color:#f0c040;}
+
+/* ===== 订单页 ===== */
+.ord-tabs{background:#fff;display:flex;border-bottom:1px solid #f5f5f5;}
+.otab{flex:1;text-align:center;padding:12px 0;font-size:12px;color:#888;cursor:pointer;position:relative;}
+.otab.on{color:#1a6b4a;font-weight:700;}
+.otab.on::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:2px;background:#1a6b4a;border-radius:1px;}
+.empty-ord{display:flex;flex-direction:column;align-items:center;padding:60px 30px;gap:10px;}
+.eo-ico{font-size:60px;}
+.eo-txt{font-size:16px;color:#555;font-weight:600;}
+.eo-sub{font-size:12px;color:#aaa;}
+.eo-btn{margin-top:10px;background:#1a6b4a;color:#fff;font-size:14px;padding:10px 28px;border-radius:25px;cursor:pointer;}
+.ord-list{padding:10px 12px;display:flex;flex-direction:column;gap:10px;}
+.ocard{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.oc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.oc-hotel{font-size:14px;font-weight:700;color:#222;}
+.oc-status{font-size:12px;font-weight:600;}
+.oc-status.paid{color:#1a6b4a;}
+.oc-status.pending{color:#e84040;}
+.oc-status.done{color:#888;}
+.oc-room{font-size:12px;color:#1a6b4a;margin-bottom:4px;}
+.oc-dates{font-size:11px;color:#888;margin-bottom:10px;}
+.oc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #f5f5f5;margin-bottom:10px;}
+.oc-no{font-size:10px;color:#aaa;}
+.oc-price{font-size:16px;font-weight:800;color:#e84040;}
+.oc-acts{display:flex;justify-content:flex-end;gap:8px;}
+.oc-btn{font-size:12px;padding:7px 16px;border-radius:20px;font-weight:600;cursor:pointer;}
+.oc-btn.out{border:1.5px solid #1a6b4a;color:#1a6b4a;}
+.oc-btn.pri{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;}
+
+/* 填写订单 */
+.fill-order{padding:10px 12px;}
+.fo-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.fo-ttl{font-size:15px;font-weight:700;color:#222;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.fo-hotel-info{display:flex;gap:10px;align-items:center;}
+.fo-hotel-img{width:70px;height:56px;border-radius:8px;object-fit:cover;}
+.fo-hotel-detail{flex:1;}
+.fo-hotel-name{font-size:13px;font-weight:700;color:#222;margin-bottom:4px;}
+.fo-hotel-room{font-size:12px;color:#1a6b4a;margin-bottom:4px;}
+.fo-hotel-dates{font-size:11px;color:#888;}
+.fo-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f5f5f5;}
+.fo-row:last-child{border-bottom:none;}
+.fo-lbl{font-size:13px;color:#555;width:72px;flex-shrink:0;}
+.fo-val{flex:1;font-size:13px;color:#222;}
+.fo-input{flex:1;border:none;outline:none;font-size:13px;color:#222;background:transparent;}
+.fo-input::placeholder{color:#ccc;}
+.fo-arr{font-size:16px;color:#ccc;}
+.price-detail{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.pd-ttl{font-size:15px;font-weight:700;color:#222;margin-bottom:12px;}
+.pd-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;}
+.pd-lbl{color:#666;}
+.pd-val{color:#333;}
+.pd-total{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #f5f5f5;margin-top:4px;}
+.pd-total-lbl{font-size:14px;font-weight:700;color:#222;}
+.pd-total-val{font-size:20px;font-weight:900;color:#e84040;}
+.fo-submit{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;font-size:16px;font-weight:700;text-align:center;padding:14px;border-radius:25px;cursor:pointer;margin:0 12px 20px;}
+
+/* ===== 个人中心 ===== */
+.my-top{background:linear-gradient(160deg,#0d4a30,#1a6b4a,#2d9e6e);padding:30px 16px 16px;}
+.my-user{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.my-av{width:62px;height:62px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;border:2px solid rgba(255,255,255,0.4);flex-shrink:0;}
+.my-name{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;}
+.my-lv{display:inline-flex;align-items:center;gap:3px;background:rgba(212,160,23,0.3);border-radius:10px;padding:2px 8px;}
+.my-lv-t{font-size:11px;color:#f0c040;font-weight:600;}
+.my-pts{display:flex;flex-direction:column;align-items:center;margin-left:auto;}
+.my-pts-n{font-size:22px;font-weight:900;color:#f0c040;}
+.my-pts-l{font-size:10px;color:rgba(255,255,255,0.7);}
+.my-stats{background:rgba(255,255,255,0.15);border-radius:10px;padding:12px 0;display:flex;}
+.my-si{flex:1;text-align:center;}
+.my-sn{display:block;font-size:18px;font-weight:800;color:#fff;}
+.my-sl{display:block;font-size:10px;color:rgba(255,255,255,0.7);}
+.my-sd{width:1px;background:rgba(255,255,255,0.2);margin:4px 0;}
+.oq-card{background:#fff;margin:10px 12px;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.oq-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.oq-ttl{font-size:14px;font-weight:700;color:#222;}
+.oq-all{font-size:12px;color:#1a6b4a;cursor:pointer;}
+.oq-list{display:flex;justify-content:space-around;}
+.oq-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
+.oq-ico{font-size:26px;}
+.oq-lbl{font-size:11px;color:#555;}
+.my-menu{background:#fff;margin:0 12px 10px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.mm-item{display:flex;align-items:center;padding:14px;cursor:pointer;}
+.mm-ico{font-size:20px;width:28px;text-align:center;margin-right:10px;}
+.mm-lbl{flex:1;font-size:14px;color:#333;}
+.mm-arr{font-size:16px;color:#ccc;}
+.mm-div{height:1px;background:#f5f5f5;margin:0 14px;}
+.my-logout{margin:0 12px 10px;background:#fff;border-radius:12px;padding:14px;text-align:center;font-size:15px;color:#e84040;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.my-ver{text-align:center;padding:10px 0 20px;color:#ccc;font-size:11px;}
+
+/* 弹窗 */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:flex-end;justify-content:center;}
+.modal-mask.show{display:flex;}
+.modal-box{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:390px;padding:20px;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-ttl{font-size:17px;font-weight:700;color:#222;text-align:center;margin-bottom:16px;}
+.modal-msg{font-size:14px;color:#555;text-align:center;line-height:1.7;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;}
+.modal-btn{flex:1;padding:12px;border-radius:25px;text-align:center;font-size:15px;font-weight:700;cursor:pointer;}
+.modal-btn.cancel{background:#f5f5f5;color:#666;}
+.modal-btn.confirm{background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;}
+
+/* Toast */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;z-index:9999;display:none;white-space:nowrap;}
+.toast.show{display:block;}
+
+/* 相对定位 */
+.rel{position:relative;}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- 弹窗 -->
+<div class="modal-mask" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-ttl" id="modal-ttl">提示</div>
+    <div class="modal-msg" id="modal-msg"></div>
+    <div class="modal-btns" id="modal-btns"></div>
+  </div>
+</div>
+
+<div id="app">
+  <!-- 状态栏 -->
+  <div class="sbar">
+    <span class="sbar-time" id="sbar-time">9:41</span>
+    <div class="sbar-icons"><span>📶</span><span>🔋</span></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <div class="nbar" id="nbar">
+    <span class="nbar-back" id="nbar-back" onclick="goBack()">‹</span>
+    <span class="nbar-title" id="nbar-title">康家云商</span>
+    <span class="nbar-right" id="nbar-right"></span>
+  </div>
+
+  <!-- 内容区 -->
+  <div class="content" id="content">
+
+    <!-- ===== 首页 ===== -->
+    <div id="pg-home" class="page on">
+      <div class="home-top">
+        <div class="home-logo">
+          <span style="font-size:26px">🏨</span>
+          <span class="home-logo-txt">康家云商</span>
+          <span class="home-logo-sub">天津酒店预订平台</span>
+        </div>
+        <div class="home-search" onclick="go('hotels')">
+          <span>🔍</span><span>搜索天津酒店、地区...</span>
+        </div>
+        <div class="date-row">
+          <div class="dr-item">
+            <span class="dr-lbl">入住</span>
+            <span class="dr-val">03-10</span>
+            <span class="dr-wk">周二</span>
+          </div>
+          <div class="dr-sep">
+            <span class="dr-n">1</span>
+            <span class="dr-nl">晚</span>
+          </div>
+          <div class="dr-item">
+            <span class="dr-lbl">离店</span>
+            <span class="dr-val">03-11</span>
+            <span class="dr-wk">周三</span>
+          </div>
+          <div class="dr-btn" onclick="go('hotels')">搜索</div>
+        </div>
+      </div>
+
+      <!-- Banner -->
+      <div class="banner">
+        <div class="banner-track" id="banner-track">
+          <div class="banner-slide">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80" alt="">
+            <div class="banner-mask"></div>
+            <div class="banner-txt"><b>天津五星豪华酒店</b><s>低至6折，限时抢购</s></div>
+          </div>
+          <div class="banner-slide">
+            <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80" alt="">
+            <div class="banner-mask"></div>
+            <div class="banner-txt"><b>津门文化体验之旅</b><s>古文化街精品客栈，感受百年津韵</s></div>
+          </div>
+          <div class="banner-slide">
+            <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80" alt="">
+            <div class="banner-mask"></div>
+            <div class="banner-txt"><b>春日优惠大促</b><s>多重好礼，惊喜不断</s></div>
+          </div>
+          <div class="banner-slide">
+            <img src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80" alt="">
+            <div class="banner-mask"></div>
+            <div class="banner-txt"><b>亲子温泉度假</b><s>武清温泉，儿童免费入住</s></div>
+          </div>
+        </div>
+        <div class="banner-dots" id="banner-dots">
+          <div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+
+      <!-- 快捷导航 -->
+      <div class="quick-nav">
+        <div class="qi" onclick="go('hotels')"><div class="qi-ico g">🏨</div><span class="qi-lbl">全部酒店</span></div>
+        <div class="qi" onclick="goHotelsByArea('滨海新区')"><div class="qi-ico b">🌊</div><span class="qi-lbl">滨海新区</span></div>
+        <div class="qi" onclick="goHotelsByArea('和平区')"><div class="qi-ico o">🏛️</div><span class="qi-lbl">和平区</span></div>
+        <div class="qi" onclick="go('promo')"><div class="qi-ico r">🎁</div><span class="qi-lbl">优惠活动</span></div>
+        <div class="qi" onclick="goHotelsByArea('蓟州区')"><div class="qi-ico p">⛰️</div><span class="qi-lbl">蓟州山居</span></div>
+      </div>
+
+      <!-- 优惠横幅 -->
+      <div class="promo-strip" onclick="go('promo')">
+        <div class="ps-l">
+          <span class="ps-tag">限时特惠</span>
+          <span class="ps-ttl">津门春日大促 · 低至6折</span>
+          <span class="ps-sub">多重优惠叠加，先到先得</span>
+        </div>
+        <div class="ps-btn">立即抢购 ›</div>
+      </div>
+
+      <!-- 热门酒店 -->
+      <div class="sec-hd">
+        <div class="sec-hd-l"><div class="sec-bar"></div><span class="sec-ttl">热门酒店</span></div>
+        <span class="sec-more" onclick="go('hotels')">查看全部 ›</span>
+      </div>
+      <div class="hscroll">
+        <div class="hlist">
+          <div class="hcard rel" onclick="goDetail(0)">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80" alt="">
+            <span class="htag">豪华五星</span>
+            <div class="hcard-info">
+              <div class="hcard-name">滨海万豪悦榕庄</div>
+              <div class="hcard-area">📍滨海新区</div>
+              <div class="hcard-price"><span class="hcp-s">¥</span><span class="hcp-v">1288</span><span class="hcp-u">/晚</span></div>
+            </div>
+          </div>
+          <div class="hcard rel" onclick="goDetail(6)">
+            <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=400&q=80" alt="">
+            <span class="htag">购物天堂</span>
+            <div class="hcard-info">
+              <div class="hcard-name">滨江道希尔顿</div>
+              <div class="hcard-area">📍和平区</div>
+              <div class="hcard-price"><span class="hcp-s">¥</span><span class="hcp-v">1088</span><span class="hcp-u">/晚</span></div>
+            </div>
+          </div>
+          <div class="hcard rel" onclick="goDetail(4)">
+            <img src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=400&q=80" alt="">
+            <span class="htag">温泉度假</span>
+            <div class="hcard-info">
+              <div class="hcard-name">武清温泉度假</div>
+              <div class="hcard-area">📍武清区</div>
+              <div class="hcard-price"><span class="hcp-s">¥</span><span class="hcp-v">698</span><span class="hcp-u">/晚</span></div>
+            </div>
+          </div>
+          <div class="hcard rel" onclick="goDetail(3)">
+            <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&q=80" alt="">
+            <span class="htag">文化体验</span>
+            <div class="hcard-info">
+              <div class="hcard-name">南开古街客栈</div>
+              <div class="hcard-area">📍南开区</div>
+              <div class="hcard-price"><span class="hcp-s">¥</span><span class="hcp-v">468</span><span class="hcp-u">/晚</span></div>
+            </div>
+          </div>
+          <div class="hcard rel" onclick="goDetail(5)">
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="">
+            <span class="htag">山景禅意</span>
+            <div class="hcard-info">
+              <div class="hcard-name">蓟州盘山云境</div>
+              <div class="hcard-area">📍蓟州区</div>
+              <div class="hcard-price"><span class="hcp-s">¥</span><span class="hcp-v">788</span><span class="hcp-u">/晚</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 精选推荐 -->
+      <div class="sec-hd">
+        <div class="sec-hd-l"><div class="sec-bar"></div><span class="sec-ttl">精选推荐</span></div>
+        <span class="sec-more" onclick="go('hotels')">查看全部 ›</span>
+      </div>
+      <div class="rlist">
+        <div class="rcard" onclick="goDetail(2)">
+          <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&q=80" alt="">
+          <div class="rcard-info">
+            <div class="rcard-name">天津河西瑞吉酒店</div>
+            <div class="rcard-tags"><span class="rtag">商务首选</span><span class="rtag">地铁直达</span></div>
+            <div class="rcard-addr">📍河西区友谊路99号</div>
+            <div class="rcard-bot"><span class="rscore">9.3</span><div class="red-price"><span class="sym">¥</span><span class="val">858</span><span class="unit">/晚</span></div></div>
+          </div>
+        </div>
+        <div class="rcard" onclick="goDetail(1)">
+          <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80" alt="">
+          <div class="rcard-info">
+            <div class="rcard-name">天津和平里格兰德酒店</div>
+            <div class="rcard-tags"><span class="rtag">五大道</span><span class="rtag">欧式风情</span></div>
+            <div class="rcard-addr">📍和平区成都道88号</div>
+            <div class="rcard-bot"><span class="rscore">9.4</span><div class="red-price"><span class="sym">¥</span><span class="val">988</span><span class="unit">/晚</span></div></div>
+          </div>
+        </div>
+        <div class="rcard" onclick="goDetail(7)">
+          <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&q=80" alt="">
+          <div class="rcard-info">
+            <div class="rcard-name">天津东疆港湾精品酒店</div>
+            <div class="rcard-tags"><span class="rtag">工业风</span><span class="rtag">港口景观</span></div>
+            <div class="rcard-addr">📍滨海新区东疆港区</div>
+            <div class="rcard-bot"><span class="rscore">9.0</span><div class="red-price"><span class="sym">¥</span><span class="val">558</span><span class="unit">/晚</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 优惠预览 -->
+      <div class="sec-hd">
+        <div class="sec-hd-l"><div class="sec-bar"></div><span class="sec-ttl">优惠活动</span></div>
+        <span class="sec-more" onclick="go('promo')">更多活动 ›</span>
+      </div>
+      <div style="padding:0 12px 14px;display:flex;flex-direction:column;gap:10px;">
+        <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;" onclick="go('promo')">
+          <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80" style="width:100%;height:110px;object-fit:cover;display:block;" alt="">
+          <div style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+            <div><div style="font-size:14px;font-weight:700;color:#222;margin-bottom:2px;">津门春日特惠</div><div style="font-size:11px;color:#888;">低至6折 · 5家酒店参与</div></div>
+            <div style="background:linear-gradient(135deg,#d4a017,#f0c040);color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;">立即查看</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;" onclick="go('promo')">
+          <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80" style="width:100%;height:110px;object-fit:cover;display:block;" alt="">
+          <div style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+            <div><div style="font-size:14px;font-weight:700;color:#222;margin-bottom:2px;">连住优惠套餐</div><div style="font-size:11px;color:#888;">住2晚送1晚 · 全部酒店适用</div></div>
+            <div style="background:linear-gradient(135deg,#1a6b4a,#2d9e6e);color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;">立即查看</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:10px 0 14px;font-size:11px;color:#ccc;">🏨 康家云商 · 安全支付 · 极速确认 · 随时退改</div>
+    </div>
+
+    <!-- ===== 酒店列表 ===== -->
+    <div id="pg-hotels" class="page">
+      <div class="filter-bar">
+        <div class="fb-search"><div class="fb-box" onclick="showToast('搜索功能开发中')">🔍 搜索天津酒店名称、地区...</div></div>
+        <div class="area-tabs" id="area-tabs">
+          <div class="atab on" onclick="filterArea(this,'全部')">全部</div>
+          <div class="atab" onclick="filterArea(this,'和平区')">和平区</div>
+          <div class="atab" onclick="filterArea(this,'河西区')">河西区</div>
+          <div class="atab" onclick="filterArea(this,'南开区')">南开区</div>
+          <div class="atab" onclick="filterArea(this,'滨海新区')">滨海新区</div>
+          <div class="atab" onclick="filterArea(this,'武清区')">武清区</div>
+          <div class="atab" onclick="filterArea(this,'蓟州区')">蓟州区</div>
+        </div>
+        <div class="sort-row">
+          <div class="stab on" onclick="sortBy(this,'综合')">综合排序</div>
+          <div class="stab" onclick="sortBy(this,'价格↑')">价格↑</div>
+          <div class="stab" onclick="sortBy(this,'价格↓')">价格↓</div>
+          <div class="stab" onclick="sortBy(this,'评分')">评分最高</div>
+          <div class="stab" onclick="showToast('筛选功能开发中')">⚙ 筛选</div>
+        </div>
+      </div>
+      <div class="date-strip">
+        <span class="ds-lbl">入住：03-10</span>
+        <span class="ds-n">共1晚</span>
+        <span class="ds-lbl">离店：03-11</span>
+        <span class="ds-chg" onclick="showToast('日期选择开发中')">修改</span>
+      </div>
+      <div class="res-cnt">共找到 <em id="hotel-count">8</em> 家天津酒店</div>
+      <div class="hlwrap" id="hotel-list-wrap"></div>
+      <div style="height:14px;"></div>
+    </div>
+
+    <!-- ===== 酒店详情 ===== -->
+    <div id="pg-detail" class="page">
+      <div class="det-swiper">
+        <img id="det-img" src="" alt="">
+        <div class="det-mask"></div>
+        <div class="det-back" onclick="goBack()">‹</div>
+        <div class="det-cnt">🖼 3张</div>
+      </div>
+      <div class="det-basic">
+        <div class="det-hd">
+          <div>
+            <div class="det-name" id="det-name"></div>
+            <div class="det-stars" id="det-stars"></div>
+          </div>
+          <div class="det-sbadge">
+            <span class="dsb-n" id="det-score"></span>
+            <span class="dsb-l" id="det-slv"></span>
+            <span class="dsb-c" id="det-scnt"></span>
+          </div>
+        </div>
+        <div class="det-tags" id="det-tags"></div>
+        <div class="det-addr" id="det-addr"></div>
+        <div class="det-datebar">
+          <div class="ddb-item"><span class="ddb-lbl">入住</span><span class="ddb-val">03-10</span></div>
+          <div class="ddb-sep"><span class="ddb-n">1</span><span class="ddb-nl">晚</span></div>
+          <div class="ddb-item"><span class="ddb-lbl">离店</span><span class="ddb-val">03-11</span></div>
+        </div>
+      </div>
+      <div class="det-sec">
+        <div class="ds-hd"><div class="ds-bar"></div><span class="ds-ttl">酒店简介</span></div>
+        <div class="desc-txt" id="det-desc"></div>
+      </div>
+      <div class="det-sec">
+        <div class="ds-hd"><div class="ds-bar"></div><span class="ds-ttl">设施服务</span></div>
+        <div class="fac-grid" id="det-facs"></div>
+      </div>
+      <div class="det-sec">
+        <div class="ds-hd"><div class="ds-bar"></div><span class="ds-ttl">选择房型</span></div>
+        <div class="room-list" id="det-rooms"></div>
+      </div>
+      <div class="det-sec">
+        <div class="ds-hd"><div class="ds-bar"></div><span class="ds-ttl">用户评价</span></div>
+        <div class="rev-list" id="det-revs"></div>
+      </div>
+      <div style="height:70px;"></div>
+    </div>
+
+    <!-- ===== 优惠活动 ===== -->
+    <div id="pg-promo" class="page">
+      <div class="promo-top">
+        <span class="pt-ttl">🎁 优惠活动中心</span>
+        <span class="pt-sub">天津酒店专属福利，每天更新</span>
+        <div class="ptabs" id="ptabs">
+          <div class="ptab on" onclick="filterPromo(this,'全部')"><span class="pi">🎁</span><span class="pl">全部活动</span></div>
+          <div class="ptab" onclick="filterPromo(this,'折扣')"><span class="pi">🏷️</span><span class="pl">折扣优惠</span></div>
+          <div class="ptab" onclick="filterPromo(this,'买赠')"><span class="pi">🎀</span><span class="pl">买赠活动</span></div>
+          <div class="ptab" onclick="filterPromo(this,'亲子')"><span class="pi">👨‍👩‍👧</span><span class="pl">亲子专属</span></div>
+          <div class="ptab" onclick="filterPromo(this,'会员')"><span class="pi">👑</span><span class="pl">会员专享</span></div>
+          <div class="ptab" onclick="filterPromo(this,'周末')"><span class="pi">🌟</span><span class="pl">周末特惠</span></div>
+        </div>
+      </div>
+      <div class="cdown">
+        <span>⏰</span><span>春日特惠倒计时：</span>
+        <span class="cdown-t" id="cdown-t">05:23:41</span>
+        <span>后结束</span>
+      </div>
+      <div class="pbig-list" id="promo-list"></div>
+      <div class="mem-card" onclick="showModal('会员专区','注册康家云商会员，享受额外9折优惠、积分兑换、专属客服等专属权益！\n\n当前积分：1280分\n会员等级：银卡会员','去注册','取消')">
+        <div class="mc-l"><span class="mc-ico">👑</span><div><div class="mc-ttl">康家云商会员专区</div><div class="mc-sub">注册会员，享受更多专属优惠</div></div></div>
+        <span class="mc-arr">›</span>
+      </div>
+    </div>
+
+    <!-- ===== 订单页 ===== -->
+    <div id="pg-order" class="page">
+      <div class="ord-tabs" id="ord-tabs">
+        <div class="otab on" onclick="filterOrder(this,'全部')">全部</div>
+        <div class="otab" onclick="filterOrder(this,'待支付')">待支付</div>
+        <div class="otab" onclick="filterOrder(this,'已支付')">已支付</div>
+        <div class="otab" onclick="filterOrder(this,'已完成')">已完成</div>
+        <div class="otab" onclick="filterOrder(this,'已取消')">已取消</div>
+      </div>
+      <div id="ord-content"></div>
+    </div>
+
+    <!-- ===== 填写订单 ===== -->
+    <div id="pg-fill" class="page">
+      <div class="fill-order">
+        <div class="fo-card">
+          <div class="fo-ttl">🏨 预订信息</div>
+          <div class="fo-hotel-info">
+            <img class="fo-hotel-img" id="fo-img" src="" alt="">
+            <div class="fo-hotel-detail">
+              <div class="fo-hotel-name" id="fo-hname"></div>
+              <div class="fo-hotel-room" id="fo-room"></div>
+              <div class="fo-hotel-dates">2026-03-10 至 2026-03-11 · 共1晚</div>
+            </div>
+          </div>
+        </div>
+        <div class="fo-card">
+          <div class="fo-ttl">👤 入住人信息</div>
+          <div class="fo-row">
+            <span class="fo-lbl">入住人</span>
+            <input class="fo-input" id="fo-name" placeholder="请输入入住人姓名" type="text">
+          </div>
+          <div class="fo-row">
+            <span class="fo-lbl">手机号</span>
+            <input class="fo-input" id="fo-phone" placeholder="请输入手机号" type="tel">
+          </div>
+          <div class="fo-row" onclick="selectCoupon()">
+            <span class="fo-lbl">优惠券</span>
+            <span class="fo-val" id="fo-coupon" style="color:#1a6b4a;">点击选择优惠券</span>
+            <span class="fo-arr">›</span>
+          </div>
+          <div class="fo-row">
+            <span class="fo-lbl">备注</span>
+            <input class="fo-input" id="fo-remark" placeholder="特殊需求（可选）" type="text">
+          </div>
+        </div>
+        <div class="price-detail">
+          <div class="pd-ttl">💰 价格明细</div>
+          <div class="pd-row"><span class="pd-lbl" id="pd-room-lbl">房间费用</span><span class="pd-val" id="pd-room-val"></span></div>
+          <div class="pd-row" id="pd-coupon-row" style="display:none;"><span class="pd-lbl">优惠券抵扣</span><span class="pd-val" id="pd-coupon-val" style="color:#e84040;"></span></div>
+          <div class="pd-total"><span class="pd-total-lbl">合计</span><span class="pd-total-val" id="pd-total"></span></div>
+        </div>
+        <div class="fo-submit" onclick="submitOrder()">立即支付预订</div>
+      </div>
+    </div>
+
+    <!-- ===== 个人中心 ===== -->
+    <div id="pg-my" class="page">
+      <div class="my-top">
+        <div class="my-user">
+          <div class="my-av" id="my-av">🧑</div>
+          <div>
+            <div class="my-name" id="my-name">点击登录/注册</div>
+            <div class="my-lv"><span>👑</span><span class="my-lv-t" id="my-lv">普通会员</span></div>
+          </div>
+          <div class="my-pts">
+            <span class="my-pts-n" id="my-pts">0</span>
+            <span class="my-pts-l">积分</span>
+          </div>
+        </div>
+        <div class="my-stats">
+          <div class="my-si"><span class="my-sn" id="my-orders">0</span><span class="my-sl">订单数</span></div>
+          <div class="my-sd"></div>
+          <div class="my-si"><span class="my-sn">3</span><span class="my-sl">优惠券</span></div>
+          <div class="my-sd"></div>
+          <div class="my-si"><span class="my-sn">5</span><span class="my-sl">收藏</span></div>
+          <div class="my-sd"></div>
+          <div class="my-si"><span class="my-sn" id="my-pts2">0</span><span class="my-sl">积分</span></div>
+        </div>
+      </div>
+      <div class="oq-card">
+        <div class="oq-hd"><span class="oq-ttl">我的订单</span><span class="oq-all" onclick="go('order')">全部订单 ›</span></div>
+        <div class="oq-list">
+          <div class="oq-item" onclick="goOrderTab('待支付')"><span class="oq-ico">⏳</span><span class="oq-lbl">待支付</span></div>
+          <div class="oq-item" onclick="goOrderTab('已支付')"><span class="oq-ico">✅</span><span class="oq-lbl">已支付</span></div>
+          <div class="oq-item" onclick="goOrderTab('已完成')"><span class="oq-ico">🏆</span><span class="oq-lbl">已完成</span></div>
+          <div class="oq-item" onclick="goOrderTab('已取消')"><span class="oq-ico">❌</span><span class="oq-lbl">已取消</span></div>
+        </div>
+      </div>
+      <div class="my-menu">
+        <div class="mm-item" onclick="showToast('收藏功能开发中')"><span class="mm-ico">❤️</span><span class="mm-lbl">我的收藏</span><span class="mm-arr">›</span></div>
+        <div class="mm-div"></div>
+        <div class="mm-item" onclick="showCoupons()"><span class="mm-ico">🎫</span><span class="mm-lbl">我的优惠券</span><span class="mm-arr">›</span></div>
+        <div class="mm-div"></div>
+        <div class="mm-item" onclick="showPoints()"><span class="mm-ico">⭐</span><span class="mm-lbl">积分中心</span><span class="mm-arr">›</span></div>
+        <div class="mm-div"></div>
+        <div class="mm-item" onclick="showToast('发票管理开发中')"><span class="mm-ico">🧾</span><span class="mm-lbl">发票管理</span><span class="mm-arr">›</span></div>
+      </div>
+      <div class="my-menu">
+        <div class="mm-item" onclick="showModal('联系客服','客服热线：400-888-8888\n服务时间：7×24小时\n微信客服：kangjia_service','知道了','')"><span class="mm-ico">🎧</span><span class="mm-lbl">联系客服</span><span class="mm-arr">›</span></div>
+        <div class="mm-div"></div>
+        <div class="mm-item" onclick="showModal('关于康家云商','康家云商是专注天津本地优质酒店的一站式预订平台，致力于为用户提供安全、便捷、实惠的住宿预订服务。\n\n版本：v1.0.0\n客服：400-888-8888','知道了','')"><span class="mm-ico">ℹ️</span><span class="mm-lbl">关于康家云商</span><span class="mm-arr">›</span></div>
+        <div class="mm-div"></div>
+        <div class="mm-item" onclick="showToast('设置功能开发中')"><span class="mm-ico">⚙️</span><span class="mm-lbl">设置</span><span class="mm-arr">›</span></div>
+      </div>
+      <div class="my-logout" id="my-logout" onclick="handleLogin()">登录 / 注册</div>
+      <div class="my-ver">🏨 康家云商 · v1.0.0 · 天津优质酒店预订平台</div>
+    </div>
+
+  </div><!-- end content -->
+
+  <!-- 详情页底部预订栏（独立于content） -->
+  <div id="det-bookbar" class="det-bookbar" style="display:none;">
+    <div class="dbb-l">
+      <div class="dbb-pr"><span class="dbb-s">¥</span><span class="dbb-v" id="dbb-price">0</span><span class="dbb-u">/晚</span></div>
+      <div class="dbb-t">共1晚 合计<span id="dbb-total">¥0</span></div>
+    </div>
+    <div class="dbb-btn" onclick="goFillOrder()">立即预订</div>
+  </div>
+
+  <!-- TabBar -->
+  <div class="tabbar" id="tabbar">
+    <div class="tab on" id="tab-home" onclick="go('home')"><span class="tab-ico">🏠</span><span class="tab-lbl">首页</span></div>
+    <div class="tab" id="tab-hotels" onclick="go('hotels')"><span class="tab-ico">🏨</span><span class="tab-lbl">酒店</span></div>
+    <div class="tab" id="tab-promo" onclick="go('promo')"><span class="tab-ico">🎁</span><span class="tab-lbl">优惠</span></div>
+    <div class="tab" id="tab-order" onclick="go('order')"><span class="tab-ico">📋</span><span class="tab-lbl">订单</span></div>
+    <div class="tab" id="tab-my" onclick="go('my')"><span class="tab-ico">👤</span><span class="tab-lbl">我的</span></div>
+  </div>
+</div>
+
+<script>
+// ===== 数据 =====
+const HOTELS = [
+  {id:0,name:'天津滨海万豪悦榕庄',area:'滨海新区',stars:'★★★★★',score:9.6,slv:'极好',scnt:'3821条评价',price:1288,tags:['豪华五星','海景房','无边泳池'],addr:'📍滨海新区响螺湾商务区海滨大道88号',desc:'坐落于天津滨海新区响螺湾核心商务区，毗邻渤海湾，拥有绝美海景。酒店设有360度无边泳池、米其林餐厅、顶级SPA水疗中心，是商务出行与休闲度假的首选之地。',img:'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','🏊游泳池','💆SPA','💪健身房','🍽️餐厅','🏢会议室','💼商务中心'],rooms:[{type:'豪华海景大床房',bed:'1.8m大床',size:'52㎡',meal:'含早',stock:'剩余5间',price:1288},{type:'行政套房',bed:'2.0m大床',size:'88㎡',meal:'含双早',stock:'剩余3间',price:2188},{type:'总统套房',bed:'2.0m超大床',size:'180㎡',meal:'含双早',stock:'仅剩1间！',price:5888,low:true}],reviews:[{av:'🧑',name:'旅行达人小李',date:'2026-02-18',stars:'★★★★★',txt:'酒店环境非常好，服务也很周到，房间干净整洁，位置便利，下次来天津还会选择这里！',room:'豪华大床房'},{av:'👨‍💼',name:'商务出行王总',date:'2026-02-10',stars:'★★★★★',txt:'出差常住，性价比很高，早餐品种丰富，前台服务很热情，停车也方便，强烈推荐！',room:'行政大床房'}]},
+  {id:1,name:'天津和平里格兰德酒店',area:'和平区',stars:'★★★★★',score:9.4,slv:'极好',scnt:'2756条评价',price:988,tags:['五大道','欧式风情','历史建筑'],addr:'📍和平区成都道88号（近五大道）',desc:'坐落于天津五大道历史文化街区，酒店建筑融合欧式古典与现代奢华，毗邻众多历史名人故居，是感受天津百年历史文化的最佳落脚点。',img:'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','🍽️餐厅','💆SPA','💪健身房','🏢会议室','🎭文化活动','🚗接送机'],rooms:[{type:'欧式经典大床房',bed:'1.8m大床',size:'45㎡',meal:'含早',stock:'剩余8间',price:988},{type:'五大道景观房',bed:'1.8m大床',size:'55㎡',meal:'含早',stock:'剩余4间',price:1288},{type:'豪华套房',bed:'2.0m大床',size:'95㎡',meal:'含双早',stock:'剩余2间',price:2388}],reviews:[{av:'👩',name:'文艺青年小云',date:'2026-02-20',stars:'★★★★★',txt:'酒店位置绝佳，走路就能逛五大道，房间装修很有历史感，早餐也很丰盛，非常满意！',room:'欧式经典大床房'},{av:'👴',name:'老天津人张叔',date:'2026-01-28',stars:'★★★★',txt:'带外地朋友来住，他们都说很有天津特色，服务也不错，就是停车稍微麻烦一点。',room:'五大道景观房'}]},
+  {id:2,name:'天津河西瑞吉酒店',area:'河西区',stars:'★★★★★',score:9.3,slv:'极好',scnt:'2134条评价',price:858,tags:['商务首选','地铁直达','行政酒廊'],addr:'📍河西区友谊路99号（地铁2号线直达）',desc:'天津商务出行的首选之地，紧邻地铁2号线，交通极为便利。酒店设有专属行政酒廊，提供全天候商务服务，是商务人士的理想住所。',img:'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','🍽️餐厅','💪健身房','🏢会议室','💼商务中心','🚇地铁直达','🛎️行政酒廊'],rooms:[{type:'商务标准大床房',bed:'1.8m大床',size:'42㎡',meal:'含早',stock:'剩余12间',price:858},{type:'行政大床房',bed:'1.8m大床',size:'52㎡',meal:'含双早',stock:'剩余6间',price:1188},{type:'行政套房',bed:'2.0m大床',size:'80㎡',meal:'含双早',stock:'剩余3间',price:1988}],reviews:[{av:'👨‍💻',name:'互联网人阿强',date:'2026-03-01',stars:'★★★★★',txt:'出差必住！地铁直达超方便，WiFi速度很快，早餐种类多，行政酒廊的咖啡很好喝！',room:'行政大床房'},{av:'👩‍💼',name:'职场精英刘姐',date:'2026-02-15',stars:'★★★★',txt:'会议室设施齐全，服务很专业，唯一美中不足是周边餐饮选择稍少，其他都很好。',room:'商务标准大床房'}]},
+  {id:3,name:'天津南开古文化街精品客栈',area:'南开区',stars:'★★★★',score:9.1,slv:'很好',scnt:'1543条评价',price:468,tags:['文化体验','特色民宿','非遗周边'],addr:'📍南开区古文化街旁通庆里8号',desc:'紧邻天津古文化街，是感受津派文化的绝佳之所。客栈保留了传统四合院格局，融入现代舒适设施，周边泥人张、杨柳青年画等非遗工坊步行可达。',img:'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80',facs:['📶免费WiFi','🎭文化体验','🍵茶室','📸打卡景点','🛍️购物便利','🎨非遗工坊','🍜特色早餐','🚲共享单车'],rooms:[{type:'津味四合院标间',bed:'1.5m双床',size:'32㎡',meal:'含早',stock:'剩余6间',price:468},{type:'津味大床房',bed:'1.8m大床',size:'38㎡',meal:'含早',stock:'剩余4间',price:528},{type:'文化主题套房',bed:'2.0m大床',size:'65㎡',meal:'含双早',stock:'剩余2间',price:888}],reviews:[{av:'👩‍🎨',name:'文化爱好者小梅',date:'2026-02-25',stars:'★★★★★',txt:'太有特色了！客栈装修充满天津文化气息，老板很热情，给我们介绍了很多本地特色，强烈推荐！',room:'文化主题套房'},{av:'👨‍👩‍👧',name:'一家三口旅行',date:'2026-02-08',stars:'★★★★',txt:'带孩子来体验天津文化，住这里非常合适，周边景点都能步行到达，孩子很喜欢。',room:'津味四合院标间'}]},
+  {id:4,name:'天津武清温泉度假酒店',area:'武清区',stars:'★★★★',score:9.0,slv:'很好',scnt:'1876条评价',price:698,tags:['亲子温泉','儿童乐园','度假首选'],addr:'📍武清区温泉大道168号',desc:'拥有天津最大的室内外温泉度假区，配套儿童水上乐园、亲子农场、户外拓展等设施，是家庭度假的不二之选。12岁以下儿童免费入住。',img:'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','♨️温泉','🏊儿童泳池','🎠儿童乐园','🍽️餐厅','🌿农场体验','🏋️健身房'],rooms:[{type:'亲子温泉标准房',bed:'1.5m双床',size:'48㎡',meal:'含双早',stock:'剩余10间',price:698},{type:'温泉大床房',bed:'1.8m大床',size:'52㎡',meal:'含早',stock:'剩余7间',price:788},{type:'家庭温泉套房',bed:'1.8m+1.2m',size:'88㎡',meal:'含三早',stock:'剩余3间',price:1288,low:true}],reviews:[{av:'👨‍👩‍👦',name:'幸福一家人',date:'2026-02-28',stars:'★★★★★',txt:'带孩子来玩，简直太棒了！温泉水质很好，儿童乐园设施齐全，孩子玩得不想走，下次还来！',room:'亲子温泉标准房'},{av:'👩',name:'周末度假小芳',date:'2026-02-14',stars:'★★★★',txt:'情侣周末来泡温泉，非常放松，环境很好，服务也很贴心，就是距离市区稍远。',room:'温泉大床房'}]},
+  {id:5,name:'天津蓟州盘山云境酒店',area:'蓟州区',stars:'★★★★',score:9.2,slv:'极好',scnt:'1298条评价',price:788,tags:['山景禅意','网红打卡','自然度假'],addr:'📍蓟州区盘山风景区山腰处',desc:'隐于盘山之间，云雾缭绕，是天津最具禅意的度假酒店。每间客房均有独立山景露台，可俯瞰盘山全貌，感受"京东第一山"的磅礴气势。',img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','🌄山景露台','🍵禅茶体验','🧘冥想空间','🥾登山步道','🍽️山野料理','📸绝美打卡'],rooms:[{type:'山景大床房',bed:'1.8m大床',size:'45㎡',meal:'含早',stock:'剩余5间',price:788},{type:'悬崖观景套房',bed:'2.0m大床',size:'68㎡',meal:'含双早',stock:'剩余3间',price:1388,low:true},{type:'云境别墅',bed:'2.0m大床+双床',size:'160㎡',meal:'含三早',stock:'剩余1间！',price:3888,low:true}],reviews:[{av:'📸',name:'摄影师老王',date:'2026-03-05',stars:'★★★★★',txt:'拍照圣地！日出时分站在露台上，云海翻涌，美到窒息。酒店服务也很好，强烈推荐摄影爱好者！',room:'悬崖观景套房'},{av:'👩‍💻',name:'逃离城市的程序员',date:'2026-02-22',stars:'★★★★★',txt:'终于找到了能让我放下手机的地方，山里的空气太好了，睡眠质量极佳，回来整个人都精神了！',room:'山景大床房'}]},
+  {id:6,name:'天津滨江道希尔顿逸林酒店',area:'和平区',stars:'★★★★★',score:9.5,slv:'极好',scnt:'3102条评价',price:1088,tags:['购物天堂','繁华地段','国际品牌'],addr:'📍和平区滨江道与和平路交口66号',desc:'坐落于天津最繁华的滨江道商业步行街核心地带，购物、美食、娱乐一应俱全。酒店由国际知名希尔顿集团管理，服务标准达到国际一流水准。',img:'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','🛍️购物便利','🍽️餐厅','💆SPA','💪健身房','🏢会议室','🎭娱乐设施'],rooms:[{type:'城市景观大床房',bed:'1.8m大床',size:'46㎡',meal:'含早',stock:'剩余9间',price:1088},{type:'豪华套房',bed:'2.0m大床',size:'82㎡',meal:'含双早',stock:'剩余4间',price:1988},{type:'行政套房',bed:'2.0m大床',size:'110㎡',meal:'含双早',stock:'剩余2间',price:2888}],reviews:[{av:'👩‍🛍️',name:'购物达人小红',date:'2026-03-02',stars:'★★★★★',txt:'位置太好了！出门就是滨江道，逛街购物超方便，酒店设施也很完善，服务一流！',room:'城市景观大床房'},{av:'👨',name:'来津出差的小明',date:'2026-02-19',stars:'★★★★',txt:'国际品牌的服务果然不一样，房间很舒适，早餐品种丰富，下次出差还会选择。',room:'豪华套房'}]},
+  {id:7,name:'天津东疆港湾精品酒店',area:'滨海新区',stars:'★★★★',score:9.0,slv:'很好',scnt:'987条评价',price:558,tags:['工业风','港口景观','网红打卡'],addr:'📍滨海新区东疆港区港湾大道1号',desc:'以天津港百年工业文化为设计灵感，融合现代精品酒店理念，打造独特的工业港口风情住宿体验。可俯瞰东疆港壮观的集装箱码头全景。',img:'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80',facs:['📶免费WiFi','🅿️停车场','🌊港口景观','📸工业打卡','🍽️特色餐厅','🚢港口游览','💪健身房','🎨艺术展览'],rooms:[{type:'港湾标准大床房',bed:'1.8m大床',size:'40㎡',meal:'含早',stock:'剩余8间',price:558},{type:'港口景观房',bed:'1.8m大床',size:'50㎡',meal:'含早',stock:'剩余5间',price:688},{type:'工业风套房',bed:'2.0m大床',size:'75㎡',meal:'含双早',stock:'剩余2间',price:1188}],reviews:[{av:'🎨',name:'设计师阿杰',date:'2026-02-26',stars:'★★★★★',txt:'工业风设计太有质感了！港口景观非常震撼，晚上灯光秀更是绝美，是个很有特色的酒店！',room:'港口景观房'},{av:'📸',name:'旅行博主小鱼',date:'2026-02-12',stars:'★★★★',txt:'拍照素材太丰富了，工业感十足，很有天津港的历史厚重感，推荐喜欢独特风格的朋友来住！',room:'工业风套房'}]}
+];
+
+const PROMOS = [
+  {id:0,type:'折扣',tag:'限时特惠',tagColor:'#e84040',title:'津门春日特惠',sub:'春暖花开，畅游津城',desc:'春季出游季，精选天津5家优质酒店，限时享受6折优惠。含早餐，免费升级房型，先到先得！',hotels:'适用 5 家天津酒店',valid:'2026-04-30',discount:'低至6折',img:'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80'},
+  {id:1,type:'买赠',tag:'买赠活动',tagColor:'#1a6b4a',title:'连住优惠套餐',sub:'住2晚送1晚，超值体验',desc:'连续入住2晚，免费赠送第3晚住宿。适用于全部8家天津合作酒店，周末同样有效！',hotels:'适用 8 家天津酒店',valid:'2026-05-31',discount:'买2送1',img:'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80'},
+  {id:2,type:'亲子',tag:'亲子专属',tagColor:'#ff8c00',title:'亲子欢乐假期',sub:'带娃出游，欢乐无忧',desc:'预订武清温泉度假酒店亲子房，12岁以下儿童免费入住，含儿童水上乐园门票！',hotels:'适用 1 家天津酒店',valid:'2026-06-30',discount:'儿童免费',img:'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80'},
+  {id:3,type:'会员',tag:'会员专享',tagColor:'#7b2d8b',title:'会员专属折扣',sub:'注册即享，终身受益',desc:'注册康家云商会员，所有酒店额外享受9折优惠，积分可兑换免费住宿、升级房型等权益！',hotels:'适用 8 家天津酒店',valid:'长期有效',discount:'额外9折',img:'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80'},
+  {id:4,type:'周末',tag:'周末特惠',tagColor:'#2196f3',title:'蓟州山居周末游',sub:'逃离城市，拥抱自然',desc:'周五至周日入住蓟州盘山云境酒店，立减200元，赠送景区门票2张，含早餐！',hotels:'适用 1 家天津酒店',valid:'2026-06-30',discount:'立减200元',img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80'}
+];
+
+// ===== 状态 =====
+let curPage = 'home';
+let prevPage = 'home';
+let curHotelId = 0;
+let curRoomIdx = 0;
+let curRoomPrice = 0;
+let curCoupon = null;
+let curAreaFilter = '全部';
+let isLogin = false;
+let userInfo = {name:'天津旅行者',pts:1280,lv:'银卡会员'};
+let orders = [
+  {no:'KJ17413882001',hotel:'天津滨海万豪悦榕庄',room:'豪华海景大床房',dates:'2026-03-10 至 2026-03-11，共1晚',price:1288,status:'已支付'},
+  {no:'KJ17413992002',hotel:'天津蓟州盘山云境酒店',room:'悬崖观景套房',dates:'2026-03-15 至 2026-03-17，共2晚',price:3376,status:'待支付'}
+];
+
+// ===== 导航 =====
+const PAGE_CFG = {
+  home:  {title:'康家云商',tab:'tab-home',back:false,right:''},
+  hotels:{title:'天津酒店列表',tab:'tab-hotels',back:false,right:''},
+  detail:{title:'酒店详情',tab:null,back:true,right:'分享'},
+  promo: {title:'优惠活动',tab:'tab-promo',back:false,right:''},
+  order: {title:'我的订单',tab:'tab-order',back:false,right:''},
+  fill:  {title:'填写订单',tab:null,back:true,right:''},
+  my:    {title:'个人中心',tab:'tab-my',back:false,right:''}
+};
+
+function go(page){
+  if(page===curPage && page!=='order') return;
+  prevPage = curPage;
+  curPage = page;
+  const cfg = PAGE_CFG[page];
+  // 页面切换
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+page).classList.add('on');
+  // 导航栏
+  document.getElementById('nbar-title').textContent = cfg.title;
+  document.getElementById('nbar-back').style.display = cfg.back?'block':'none';
+  document.getElementById('nbar-right').textContent = cfg.right||'';
+  // TabBar
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  if(cfg.tab) document.getElementById(cfg.tab).classList.add('on');
+  // 详情页底部栏
+  document.getElementById('det-bookbar').style.display = page==='detail'?'flex':'none';
+  document.getElementById('tabbar').style.display = (page==='detail'||page==='fill')?'none':'flex';
+  // 滚动顶部
+  document.getElementById('content').scrollTop=0;
+  // 特殊初始化
+  if(page==='order') renderOrders('全部');
+  if(page==='my') renderMy();
+  if(page==='hotels') renderHotelList(curAreaFilter);
+  if(page==='promo') renderPromos('全部');
+}
+
+function goBack(){
+  go(prevPage==='fill'?'detail':prevPage);
+}
+
+function goDetail(id){
+  curHotelId = id;
+  curRoomIdx = 0;
+  curCoupon = null;
+  const h = HOTELS[id];
+  curRoomPrice = h.rooms[0].price;
+  // 填充数据
+  document.getElementById('det-img').src = h.img;
+  document.getElementById('det-name').textContent = h.name;
+  document.getElementById('det-stars').textContent = h.stars+' 五星酒店';
+  document.getElementById('det-score').textContent = h.score;
+  document.getElementById('det-slv').textContent = h.slv;
+  document.getElementById('det-scnt').textContent = h.scnt;
+  document.getElementById('det-addr').textContent = h.addr;
+  document.getElementById('det-desc').textContent = h.desc;
+  document.getElementById('dbb-price').textContent = h.rooms[0].price;
+  document.getElementById('dbb-total').textContent = '¥'+h.rooms[0].price;
+  // 标签
+  document.getElementById('det-tags').innerHTML = h.tags.map(t=>`<span class="dtag">${t}</span>`).join('');
+  // 设施
+  document.getElementById('det-facs').innerHTML = h.facs.map(f=>{
+    const parts=f.match(/^(.)(.+)$/);
+    return `<div class="fac-item"><span class="fac-ico">${parts?parts[1]:f}</span><span class="fac-nm">${parts?parts[2]:f}</span></div>`;
+  }).join('');
+  // 房型
+  renderRooms(h);
+  // 评价
+  document.getElementById('det-revs').innerHTML = h.reviews.map(r=>`
+    <div class="rev-item">
+      <div class="rev-hd">
+        <div class="rev-av">${r.av}</div>
+        <div><div class="rev-name">${r.name}</div><div class="rev-date">${r.date}</div></div>
+        <div class="rev-stars">${r.stars}</div>
+      </div>
+      <div class="rev-txt">${r.txt}</div>
+      <div class="rev-room">入住房型：${r.room}</div>
+    </div>`).join('');
+  go('detail');
+}
+
+function renderRooms(h){
+  document.getElementById('det-rooms').innerHTML = h.rooms.map((r,i)=>`
+    <div class="ritem ${i===curRoomIdx?'sel':''}" onclick="selectRoom(${i})">
+      <div class="ri-l">
+        <div class="ri-type">${r.type}</div>
+        <div class="ri-meta">
+          <span class="ri-m">🛏 ${r.bed}</span>
+          <span class="ri-m">📐 ${r.size}</span>
+          <span class="ri-m">☕ ${r.meal}</span>
+        </div>
+        <div class="ri-stock ${r.low?'low':''}">${r.stock}</div>
+      </div>
+      <div class="ri-r">
+        <div class="ri-price"><span class="rip-s">¥</span><span class="rip-v">${r.price}</span><span class="rip-u">/晚</span></div>
+        <div class="ri-total">共1晚 ¥${r.price}</div>
+        <div class="ri-btn ${i===curRoomIdx?'sel':''}">${i===curRoomIdx?'✓ 已选':'选择'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectRoom(idx){
+  curRoomIdx = idx;
+  const h = HOTELS[curHotelId];
+  curRoomPrice = h.rooms[idx].price;
+  document.getElementById('dbb-price').textContent = curRoomPrice;
+  document.getElementById('dbb-total').textContent = '¥'+curRoomPrice;
+  renderRooms(h);
+}
+
+function goFillOrder(){
+  const h = HOTELS[curHotelId];
+  const r = h.rooms[curRoomIdx];
+  document.getElementById('fo-img').src = h.img;
+  document.getElementById('fo-hname').textContent = h.name;
+  document.getElementById('fo-room').textContent = r.type;
+  document.getElementById('pd-room-lbl').textContent = r.type;
+  document.getElementById('pd-room-val').textContent = '¥'+curRoomPrice;
+  document.getElementById('pd-total').textContent = '¥'+curRoomPrice;
+  document.getElementById('fo-coupon').textContent = '点击选择优惠券';
+  document.getElementById('fo-coupon').style.color = '#1a6b4a';
+  document.getElementById('pd-coupon-row').style.display = 'none';
+  curCoupon = null;
+  prevPage = 'detail';
+  go('fill');
+}
+
+function selectCoupon(){
+  const coupons = ['不使用优惠券','新人专享券 -50元','会员折扣券 -100元','周末特惠券 -80元'];
+  showActionSheet('选择优惠券', coupons, (idx)=>{
+    if(idx===0){
+      curCoupon=null;
+      document.getElementById('fo-coupon').textContent='点击选择优惠券';
+      document.getElementById('fo-coupon').style.color='#1a6b4a';
+      document.getElementById('pd-coupon-row').style.display='none';
+      document.getElementById('pd-total').textContent='¥'+curRoomPrice;
+    } else {
+      const discounts=[0,50,100,80];
+      const disc=discounts[idx];
+      curCoupon={label:coupons[idx],disc};
+      const final=Math.max(0,curRoomPrice-disc);
+      document.getElementById('fo-coupon').textContent=coupons[idx];
+      document.getElementById('fo-coupon').style.color='#e84040';
+      document.getElementById('pd-coupon-row').style.display='flex';
+      document.getElementById('pd-coupon-val').textContent='-¥'+disc;
+      document.getElementById('pd-total').textContent='¥'+final;
+    }
+  });
+}
+
+function submitOrder(){
+  const name=document.getElementById('fo-name').value.trim();
+  const phone=document.getElementById('fo-phone').value.trim();
+  if(!name){showToast('请填写入住人姓名');return;}
+  if(!phone||phone.length!==11){showToast('请填写正确的手机号');return;}
+  const h=HOTELS[curHotelId];
+  const r=h.rooms[curRoomIdx];
+  const disc=curCoupon?curCoupon.disc:0;
+  const final=Math.max(0,curRoomPrice-disc);
+  showModal('确认预订',`酒店：${h.name}\n房型：${r.type}\n入住人：${name}\n\n合计金额：¥${final}\n\n确认提交并支付？`,'立即支付','再想想',()=>{
+    const no='KJ'+Date.now().toString().slice(-11);
+    orders.unshift({no,hotel:h.name,room:r.type,dates:'2026-03-10 至 2026-03-11，共1晚',price:final,status:'已支付'});
+    showToast('预订成功！');
+    setTimeout(()=>go('order'),1500);
+  });
+}
+
+// ===== 酒店列表渲染 =====
+function renderHotelList(area){
+  let list = area==='全部'?HOTELS:HOTELS.filter(h=>h.area===area);
+  document.getElementById('hotel-count').textContent = list.length;
+  document.getElementById('hotel-list-wrap').innerHTML = list.map(h=>`
+    <div class="hlcard" onclick="goDetail(${h.id})">
+      <div class="hlc-img">
+        <img src="${h.img}" alt="">
+        <div class="hlc-stars">${h.stars}</div>
+        ${h.score>=9.4?'<div class="hlc-hot">🔥热门</div>':''}
+      </div>
+      <div class="hlc-body">
+        <div class="hlc-name">${h.name}</div>
+        <div class="hlc-area">📍${h.area}</div>
+        <div class="hlc-tags">${h.tags.map(t=>`<span class="hltag">${t}</span>`).join('')}</div>
+        <div class="hlc-row">
+          <div class="hlc-score">
+            <div class="hlc-sbox"><span class="hlc-sv">${h.score}</span></div>
+            <div><div class="hlc-slv">${h.slv}</div><div class="hlc-scnt">${h.scnt}</div></div>
+          </div>
+          <div class="hlc-price"><span class="hlcp-s">¥</span><span class="hlcp-v">${h.price}</span><span class="hlcp-u">/晚</span></div>
+        </div>
+        <div class="hlc-bookbtn">立即预订</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterArea(el, area){
+  curAreaFilter = area;
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderHotelList(area);
+}
+
+function goHotelsByArea(area){
+  curAreaFilter = area;
+  go('hotels');
+  setTimeout(()=>{
+    document.querySelectorAll('.atab').forEach(t=>{
+      t.classList.toggle('on', t.textContent===area);
+    });
+    renderHotelList(area);
+  },50);
+}
+
+function sortBy(el, type){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  let list = curAreaFilter==='全部'?[...HOTELS]:HOTELS.filter(h=>h.area===curAreaFilter);
+  if(type==='价格↑') list.sort((a,b)=>a.price-b.price);
+  else if(type==='价格↓') list.sort((a,b)=>b.price-a.price);
+  else if(type==='评分') list.sort((a,b)=>b.score-a.score);
+  document.getElementById('hotel-count').textContent = list.length;
+  document.getElementById('hotel-list-wrap').innerHTML = list.map(h=>`
+    <div class="hlcard" onclick="goDetail(${h.id})">
+      <div class="hlc-img">
+        <img src="${h.img}" alt="">
+        <div class="hlc-stars">${h.stars}</div>
+        ${h.score>=9.4?'<div class="hlc-hot">🔥热门</div>':''}
+      </div>
+      <div class="hlc-body">
+        <div class="hlc-name">${h.name}</div>
+        <div class="hlc-area">📍${h.area}</div>
+        <div class="hlc-tags">${h.tags.map(t=>`<span class="hltag">${t}</span>`).join('')}</div>
+        <div class="hlc-row">
+          <div class="hlc-score">
+            <div class="hlc-sbox"><span class="hlc-sv">${h.score}</span></div>
+            <div><div class="hlc-slv">${h.slv}</div><div class="hlc-scnt">${h.scnt}</div></div>
+          </div>
+          <div class="hlc-price"><span class="hlcp-s">¥</span><span class="hlcp-v">${h.price}</span><span class="hlcp-u">/晚</span></div>
+        </div>
+        <div class="hlc-bookbtn">立即预订</div>
+      </div>
+    </div>`).join('');
+}
+
+// ===== 优惠活动渲染 =====
+function renderPromos(type){
+  const list = type==='全部'?PROMOS:PROMOS.filter(p=>p.type===type);
+  document.getElementById('promo-list').innerHTML = list.map(p=>`
+    <div class="pbcard" onclick="showModal('${p.title}','${p.desc}\n\n适用范围：${p.hotels}\n有效期至：${p.valid}','立即预订','稍后再说',()=>go('hotels'))">
+      <div class="pbc-img">
+        <img src="${p.img}" alt="">
+        <div class="pbc-mask"></div>
+        <span class="pbc-tag" style="background:${p.tagColor}">${p.tag}</span>
+        <div class="pbc-disc"><span class="pbc-dv">${p.discount}</span></div>
+      </div>
+      <div class="pbc-body">
+        <div class="pbc-ttl">${p.title}</div>
+        <div class="pbc-sub">${p.sub}</div>
+        <div class="pbc-desc">${p.desc}</div>
+        <div class="pbc-hotels"><span>🏨</span><span class="pbc-ht">${p.hotels}</span></div>
+        <div class="pbc-foot">
+          <span class="pbc-valid">📅 有效期至：${p.valid}</span>
+          <span class="pbc-btn">立即使用 ›</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterPromo(el, type){
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderPromos(type);
+}
+
+// ===== 订单渲染 =====
+function renderOrders(status){
+  const list = status==='全部'?orders:orders.filter(o=>o.status===status);
+  const wrap = document.getElementById('ord-content');
+  if(!list.length){
+    wrap.innerHTML=`<div class="empty-ord">
+      <span class="eo-ico">📋</span>
+      <span class="eo-txt">暂无${status==='全部'?'':status}订单</span>
+      <span class="eo-sub">去预订一家心仪的天津酒店吧</span>
+      <div class="eo-btn" onclick="go('hotels')">去预订</div>
+    </div>`;
+    return;
+  }
+  wrap.innerHTML=`<div class="ord-list">${list.map(o=>`
+    <div class="ocard">
+      <div class="oc-hd"><span class="oc-hotel">${o.hotel}</span><span class="oc-status ${o.status==='已支付'?'paid':o.status==='待支付'?'pending':'done'}">${o.status}</span></div>
+      <div class="oc-room">${o.room}</div>
+      <div class="oc-dates">${o.dates}</div>
+      <div class="oc-foot"><span class="oc-no">订单号：${o.no}</span><span class="oc-price">¥${o.price}</span></div>
+      <div class="oc-acts">
+        ${o.status==='待支付'?`<div class="oc-btn out" onclick="cancelOrder('${o.no}')">取消订单</div><div class="oc-btn pri" onclick="payOrder('${o.no}')">立即支付</div>`:''}
+        ${o.status==='已支付'?`<div class="oc-btn out" onclick="showToast('评价功能开发中')">写评价</div><div class="oc-btn pri" onclick="reBook(${HOTELS.findIndex(h=>h.name===o.hotel)})">再次预订</div>`:''}
+        ${o.status==='已完成'?`<div class="oc-btn out" onclick="showToast('评价功能开发中')">写评价</div><div class="oc-btn pri" onclick="reBook(${HOTELS.findIndex(h=>h.name===o.hotel)})">再次预订</div>`:''}
+        ${o.status==='已取消'?`<div class="oc-btn pri" onclick="reBook(${HOTELS.findIndex(h=>h.name===o.hotel)})">重新预订</div>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function filterOrder(el, status){
+  document.querySelectorAll('.otab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderOrders(status);
+}
+
+function goOrderTab(status){
+  go('order');
+  setTimeout(()=>{
+    document.querySelectorAll('.otab').forEach(t=>{
+      t.classList.toggle('on', t.textContent===status);
+    });
+    renderOrders(status);
+  },50);
+}
+
+function cancelOrder(no){
+  showModal('取消订单','确认取消该订单吗？取消后无法恢复。','确认取消','再想想',()=>{
+    const o=orders.find(x=>x.no===no);
+    if(o) o.status='已取消';
+    renderOrders('全部');
+    document.querySelectorAll('.otab').forEach(t=>t.classList.toggle('on',t.textContent==='全部'));
+    showToast('订单已取消');
+  });
+}
+
+function payOrder(no){
+  showModal('确认支付','确认支付该订单？','立即支付','取消',()=>{
+    const o=orders.find(x=>x.no===no);
+    if(o) o.status='已支付';
+    renderOrders('全部');
+    showToast('支付成功！');
+  });
+}
+
+function reBook(id){
+  if(id>=0) goDetail(id);
+  else go('hotels');
+}
+
+// ===== 个人中心 =====
+function renderMy(){
+  const cnt = orders.length;
+  if(isLogin){
+    document.getElementById('my-av').textContent='🧑';
+    document.getElementById('my-name').textContent=userInfo.name;
+    document.getElementById('my-lv').textContent=userInfo.lv;
+    document.getElementById('my-pts').textContent=userInfo.pts;
+    document.getElementById('my-pts2').textContent=userInfo.pts;
+    document.getElementById('my-orders').textContent=cnt;
+    document.getElementById('my-logout').textContent='退出登录';
+    document.getElementById('my-logout').onclick=handleLogin;
+  } else {
+    document.getElementById('my-av').textContent='👤';
+    document.getElementById('my-name').textContent='点击登录/注册';
+    document.getElementById('my-lv').textContent='未登录';
+    document.getElementById('my-pts').textContent='0';
+    document.getElementById('my-pts2').textContent='0';
+    document.getElementById('my-orders').textContent='0';
+    document.getElementById('my-logout').textContent='登录 / 注册';
+    document.getElementById('my-logout').onclick=handleLogin;
+  }
+}
+
+function handleLogin(){
+  if(isLogin){
+    showModal('退出登录','确认退出登录吗？','确认退出','取消',()=>{
+      isLogin=false;renderMy();showToast('已退出登录');
+    });
+  } else {
+    showModal('欢迎登录康家云商','登录后可享受专属会员权益\n查看订单记录、使用优惠券等功能','微信快捷登录','取消',()=>{
+      isLogin=true;renderMy();showToast('登录成功！');
+    });
+  }
+}
+
+function showCoupons(){
+  showActionSheet('我的优惠券',['新人专享券 -50元（未使用）','会员折扣券 -100元（未使用）','周末特惠券 -80元（未使用）'],()=>{});
+}
+
+function showPoints(){
+  showModal
+('积分中心',`您当前积分：${isLogin?userInfo.pts:0}\n\n积分兑换规则：\n· 100积分 = 1元优惠券\n· 500积分 = 免费早餐\n· 1000积分 = 免费升级房型\n· 2000积分 = 免费住1晚`,'知道了','');
+}
+
+// ===== 弹窗 =====
+let modalConfirmCb = null;
+function showModal(title, msg, confirmTxt, cancelTxt, cb){
+  document.getElementById('modal-ttl').textContent = title;
+  document.getElementById('modal-msg').innerHTML = msg.replace(/\n/g,'<br>');
+  modalConfirmCb = cb||null;
+  let btns = '';
+  if(cancelTxt) btns += `<div class="modal-btn cancel" onclick="closeModal()">` + cancelTxt + `</div>`;
+  if(confirmTxt) btns += `<div class="modal-btn confirm" onclick="confirmModal()">` + confirmTxt + `</div>`;
+  document.getElementById('modal-btns').innerHTML = btns;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(e){
+  if(e && e.target!==document.getElementById('modal')) return;
+  document.getElementById('modal').classList.remove('show');
+}
+function confirmModal(){
+  document.getElementById('modal').classList.remove('show');
+  if(modalConfirmCb) modalConfirmCb();
+}
+
+// ActionSheet 用弹窗模拟
+function showActionSheet(title, items, cb){
+  const msg = items.map((it,i)=>`<div style="padding:12px 0;border-bottom:1px solid #f5f5f5;text-align:center;font-size:14px;color:#333;cursor:pointer;" onclick="asSelect(${i})">${it}</div>`).join('');
+  document.getElementById('modal-ttl').textContent = title;
+  document.getElementById('modal-msg').innerHTML = `<div style="margin:-10px 0;">${msg}</div>`;
+  document.getElementById('modal-btns').innerHTML = `<div class="modal-btn cancel" style="flex:none;width:100%;" onclick="closeModal()">取消</div>`;
+  window._asCb = cb;
+  document.getElementById('modal').classList.add('show');
+}
+function asSelect(idx){
+  document.getElementById('modal').classList.remove('show');
+  if(window._asCb) window._asCb(idx);
+}
+
+// Toast
+let toastTimer = null;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2000);
+}
+
+// ===== Banner 轮播 =====
+let bannerIdx = 0;
+function updateBanner(){
+  document.getElementById('banner-track').style.transform = `translateX(-${bannerIdx*100}%)`;
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===bannerIdx));
+}
+setInterval(()=>{ bannerIdx=(bannerIdx+1)%4; updateBanner(); }, 3500);
+
+// ===== 倒计时 =====
+let cdSecs = 5*3600+23*60+41;
+setInterval(()=>{
+  cdSecs--;
+  if(cdSecs<0) return;
+  const h=String(Math.floor(cdSecs/3600)).padStart(2,'0');
+  const m=String(Math.floor((cdSecs%3600)/60)).padStart(2,'0');
+  const s=String(cdSecs%60).padStart(2,'0');
+  const el=document.getElementById('cdown-t');
+  if(el) el.textContent=`${h}:${m}:${s}`;
+},1000);
+
+// ===== 状态栏时间 =====
+function updateTime(){
+  const now=new Date();
+  const h=String(now.getHours()).padStart(2,'0');
+  const m=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('sbar-time').textContent=`${h}:${m}`;
+}
+updateTime();
+setInterval(updateTime,30000);
+
+// ===== 初始化 =====
+renderHotelList('全部');
+renderPromos('全部');
+renderOrders('全部');
+renderMy();
+</script>
+</body>
+</html>
